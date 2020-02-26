@@ -595,7 +595,7 @@ class Database extends Core {
 
         // Iterate where creating the full conditions
         foreach ($this->betweens as $where) {
-            $string .= ' AND ' . $where['column'] . ' BETWEEN "' . $where['value_from'] . '" AND "' . $where['value_to'] . '" ';
+            $string .= ' AND ' . $where['table'] . '.' . $where['column'] . ' BETWEEN "' . $where['value_from'] . '" AND "' . $where['value_to'] . '" ';
         }
 
         // Return complete where in string
