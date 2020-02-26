@@ -1,6 +1,7 @@
 {
   "name": "andryxak4/apiframework",
   "description": "API Framework for PHP",
+  "license": "MIT",
   "keywords": ["Framework", "API", "REST"],
   "minimum-stability": "dev",
   "require": {
