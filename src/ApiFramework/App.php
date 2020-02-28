@@ -36,7 +36,8 @@ class App extends Container
         'database.password' => 'root',
         'database.file'     => '',
         'public.url'        => 'localhost',
-        'templates.path'    => 'templates'
+        'templates.path'    => 'templates',
+        'app.templates'     => 'templates/',
     ];
 
     /**
@@ -45,6 +46,24 @@ class App extends Container
      * @param array $userSettings Array of user defined options
      */
     public function __construct ($userSettings = []) {
+
+        //If config folder exists, setup settings
+        $config_folder = !empty($userSettings) && isset($userSettings['path.root']) && is_dir($userSettings['path.root'].'/config/') ? $userSettings['path.root'].'/config/' : false;
+        if ($config_folder) {
+            $settings = array_filter(scandir($config_folder), function($conf){
+                return preg_match('/\.php$/', $conf);
+            });
+            foreach ($settings as $config) {
+                $data = include_once($config_folder . $config);
+                preg_match('/^(\w+)/', $config, $match);
+                $config_name = !empty($match) && isset($match[1]) ? $match[1] : '';
+                if (is_array($data) && $config_name != '') {
+                    foreach($data as $key => $value) {
+                        $userSettings[$config_name . '.' . $key] = $value;
+                    }
+                }
+            }
+        }
 
         // Setup settings
         $this->container['settings'] = array_merge($this->defaultSettings, $userSettings);
