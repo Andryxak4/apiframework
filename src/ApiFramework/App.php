@@ -20,6 +20,7 @@ class App extends Container
         'auth.table'        => 'users',
         'auth.username'     => 'email',
         'auth.password'     => 'password',
+        'app.storage'       => 'storage/',
         'uploads.folder'    => 'storage/uploads/',
         'sessions.folder'   => 'storage/sessions/',
         'sessions.ttl'      => 3600,
@@ -125,6 +126,11 @@ class App extends Container
         // Share a file instance
         $this->container['file'] = $this->share(function ($container) {
             return new File ($this);
+        });
+
+        // Share a storage instance
+        $this->container['storage'] = $this->share(function ($container) {
+            return new Storage ($this);
         });
 
         // Share a mailing instance
