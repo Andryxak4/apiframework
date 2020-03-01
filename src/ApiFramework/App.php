@@ -38,6 +38,7 @@ class App extends Container
         'public.url'        => 'localhost',
         'templates.path'    => 'templates',
         'app.templates'     => 'templates/',
+        'app.storage'       => 'storage/',
     ];
     /**
      * @var array Custom settings from config folder
