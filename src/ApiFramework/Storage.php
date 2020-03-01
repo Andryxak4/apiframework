@@ -256,11 +256,10 @@ class Storage extends Core
     private function getPhp () {
 
         // Get data from file or die
-        $data = include_once($this->path) or die;
-        
-        // Abort if the include error
-        if (!$data) {
-            throw new \InvalidArgumentException('Error: ' . $this->path, 400);
+        try {
+            $data = include_once $this->path;
+        } catch(\Throwable $e) {
+            throw new \InvalidArgumentException('Error in: ' . $this->path, 400);
         }
 
         // Return data

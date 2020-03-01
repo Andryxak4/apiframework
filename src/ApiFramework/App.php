@@ -20,7 +20,6 @@ class App extends Container
         'auth.table'        => 'users',
         'auth.username'     => 'email',
         'auth.password'     => 'password',
-        'app.storage'       => 'storage/',
         'uploads.folder'    => 'storage/uploads/',
         'sessions.folder'   => 'storage/sessions/',
         'sessions.ttl'      => 3600,
@@ -40,6 +39,10 @@ class App extends Container
         'templates.path'    => 'templates',
         'app.templates'     => 'templates/',
     ];
+    /**
+     * @var array Custom settings from config folder
+     */
+    private $customSettings = [];
 
     /**
      * Constructor
@@ -48,26 +51,9 @@ class App extends Container
      */
     public function __construct ($userSettings = []) {
 
-        //If config folder exists, setup settings
-        $config_folder = !empty($userSettings) && isset($userSettings['path.root']) && is_dir($userSettings['path.root'].'/config/') ? $userSettings['path.root'].'/config/' : false;
-        if ($config_folder) {
-            $settings = array_filter(scandir($config_folder), function($conf){
-                return preg_match('/\.php$/', $conf);
-            });
-            foreach ($settings as $config) {
-                $data = include_once($config_folder . $config);
-                preg_match('/^(\w+)/', $config, $match);
-                $config_name = !empty($match) && isset($match[1]) ? $match[1] : '';
-                if (is_array($data) && $config_name != '') {
-                    foreach($data as $key => $value) {
-                        $userSettings[$config_name . '.' . $key] = $value;
-                    }
-                }
-            }
-        }
-
         // Setup settings
-        $this->container['settings'] = array_merge($this->defaultSettings, $userSettings);
+        $customSettings = isset($userSettings['path.root']) ? $this->configure($userSettings['path.root']) : [];
+        $this->container['settings'] = array_merge($this->defaultSettings, $userSettings, $customSettings);
 
         // Share an auth instance
         $this->container['auth'] = $this->share(function ($container) {
@@ -257,6 +243,53 @@ class App extends Container
             // Return an error response
             return $this->response->error($e->getCode(), $e->getMessage());
         }
+    }
+
+    /**
+     * Set customSettings from config files
+     *
+     * @param string project folder path
+     * @return array $customSettings
+     */
+    private function configure ($path = '') {
+        
+        //Set path with directory separator
+        $path = !in_array(substr($path, -1), [DIRECTORY_SEPARATOR, '']) ? $path . DIRECTORY_SEPARATOR : $path ;
+        
+        //If config folder exists, setup settings
+        $config_folder = $path != '' && is_dir($path . 'config' . DIRECTORY_SEPARATOR) ? $path . 'config' . DIRECTORY_SEPARATOR : false;
+        
+        if ($config_folder) {
+
+            // Get all .php files of config folder 
+            $settings = array_filter(scandir($config_folder), function($conf){
+                return preg_match('/\.php$/', $conf);
+            });
+
+            // Include data from config files
+            foreach ($settings as $config) {
+                try{
+                    $config_path = $config_folder . $config;
+                    $data = include_once($config_path);
+                } catch (\CompileError $e) {
+                    throw new \Exception('Error in config file: ' . $this->path, 400);
+                }
+
+                // Define config vars in customSettings
+                preg_match('/^(\w+)/', $config, $match);
+                $config_name = !empty($match) && isset($match[1]) ? $match[1] : '';
+                if (is_array($data) && $config_name != '') {
+                    foreach($data as $key => $value) {
+                        $this->customSettings[$config_name . '.' . $key] = $value;
+                    }
+                }
+
+            }
+
+        } else {
+
+        }
+        return $this->customSettings;
     }
 
 }
