@@ -1,4 +1,8 @@
-<?php namespace ApiFramework;
+<?php
+
+namespace ApiFramework\Models;
+
+use ApiFramework\Core;
 
 /**
  * Storage class
@@ -261,7 +265,7 @@ class Storage extends Core
         } catch(\Throwable $e) {
             throw new \InvalidArgumentException('Error in: ' . $this->path, 400);
         }
-
+        
         // Return data
         return $data;
     }

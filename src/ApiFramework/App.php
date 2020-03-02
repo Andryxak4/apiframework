@@ -1,4 +1,6 @@
-<?php namespace ApiFramework;
+<?php
+
+namespace ApiFramework;
 
 /**
  * App class
@@ -38,7 +40,6 @@ class App extends Container
         'public.url'        => 'localhost',
         'templates.path'    => 'templates',
         'app.templates'     => 'templates/',
-        'app.storage'       => 'storage/',
     ];
     /**
      * @var array Custom settings from config folder
@@ -56,30 +57,8 @@ class App extends Container
         $customSettings = isset($userSettings['path.root']) ? $this->configure($userSettings['path.root']) : [];
         $this->container['settings'] = array_merge($this->defaultSettings, $userSettings, $customSettings);
 
-        // Share an auth instance
-        $this->container['auth'] = $this->share(function ($container) {
-            return new Auth($this);
-        });
-
-        // Share a lang instance
-        $this->container['lang'] = $this->share(function ($container) {
-            return new Lang($this);
-        });
-
-        // Share a request instance
-        $this->container['request'] = $this->share(function ($container) {
-            return new Request($this);
-        });
-
-        // Share a response instance
-        $this->container['response'] = $this->share(function ($container) {
-            return new Response($this);
-        });
-
-        // Share a router instance
-        $this->container['router'] = $this->share(function ($container) {
-            return new Router($this);
-        });
+        // Share instances
+        $this->setup();
 
         // Share a PDO instance
         $this->container['pdo'] = $this->share(function ($container) {
@@ -100,25 +79,6 @@ class App extends Container
             return new Database ($this);
         });
 
-        // Share a view instance
-        $this->container['view'] = $this->share(function ($container) {
-            return new View ($this);
-        });
-
-        // Share an HTTP instance
-        $this->container['http'] = $this->share(function ($container) {
-            return new Http ($this);
-        });
-
-        // Share a file instance
-        $this->container['file'] = $this->share(function ($container) {
-            return new File ($this);
-        });
-
-        // Share a storage instance
-        $this->container['storage'] = $this->share(function ($container) {
-            return new Storage ($this);
-        });
 
         // Share a mailing instance
         if (class_exists('\\PHPMailer')) {
@@ -244,6 +204,37 @@ class App extends Container
             // Return an error response
             return $this->response->error($e->getCode(), $e->getMessage());
         }
+    }
+
+    /**
+     * Set all instances in Models directory
+     */
+    private function setup () {
+        
+        // Get all models
+        $models = array_filter(scandir(__DIR__ . DIRECTORY_SEPARATOR . 'Models'), function($model) {
+            return $model == ucwords($model) && preg_match('/\.php$/', $model);
+        });
+
+        // Share all instances
+        foreach ($models as $model) {
+
+            // Get model name
+            preg_match('/^(\w+)/', $model, $match);
+            $model_name = isset($match[1]) ? $match[1] : '';
+
+            // Share instance
+            if ($model_name != '') {
+
+                $this->container[strtolower($model_name)] = $this->share(function ($container) use($model_name) {
+                    $model = '\\ApiFramework\\Models\\' . $model_name;
+                    return new $model($this);
+                });
+
+            }
+
+        }
+
     }
 
     /**

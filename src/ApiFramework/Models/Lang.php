@@ -1,4 +1,8 @@
-<?php namespace ApiFramework;
+<?php
+
+namespace ApiFramework\Models;
+
+use ApiFramework\Core;
 
 /**
  * Lang class
