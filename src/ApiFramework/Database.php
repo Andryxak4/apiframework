@@ -194,13 +194,19 @@ class Database extends Core {
      * @return object Database instance
      */
     public function between ($column, $value_from, $value_to, $table = null) {
-        $table = $table? $table : $this->table;
-        $this->betweens[] = [
-            'table'         => $table,
-            'column'        => $column,
-            'value_from'    => $value_from,
-            'value_to'      => $value_to,
-        ];
+        $table = !is_null($table) ? $table : $this->table;
+        if ($value_from != '' && $value_to != '') {
+            $this->betweens[] = [
+                'table'         => $table,
+                'column'        => $column,
+                'value_from'    => $value_from,
+                'value_to'      => $value_to,
+            ];
+        } else if($value_from != '') {
+            $this->where($column, $value_from, '>', $this->table);
+        } else if ($value_to != '') {
+            $this->where($column, $value_to, '<', $this->table);
+        }
         return $this;
     }
 
