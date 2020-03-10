@@ -25,7 +25,7 @@ class View extends Core {
     public function render ($view, $values = array()) {
 
         // Setup the template path
-        $folder = $this->app->config('templates.path');
+        $folder = $this->app->config('app.templates') ? $this->app->config('app.templates') : $this->app->config('templates.path');
         $tempalate_path = preg_match('/\./', $view) ? str_replace('.', '/', $view) : $view;
         $view_path = $folder . $tempalate_path . '.php';
 
