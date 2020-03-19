@@ -207,6 +207,35 @@ class Model extends Core {
     }
 
     /**
+     * Sets a regexp condition
+     *
+     * @param string $column Column name
+     * @param string $value Value to match
+     * @param string $table Table
+     * @return object Database instance
+     */
+    public function regexp ($column, $pattern, $table = null) {
+        $table = $table? $table : $this->table;
+        $this->db->regexp($column, $pattern, $table);
+        return $this;
+    }
+
+    /**
+     * Sets a betweens condition
+     *
+     * @param string $column Column name
+     * @param string $value_from Value to match from
+     * @param string $value_to Value to match to
+     * @param string $table Table
+     * @return object Database instance
+     */
+    public function between ($column, $value_from, $value_to, $table = null) {
+        $table = $table? $table : $this->table;
+        $this->db->between($column, $value_from, $value_to, $table = null);
+        return $this;
+    }
+
+    /**
      * Gets the primary key
      *
      * @return string Primary key column name

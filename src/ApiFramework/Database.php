@@ -47,6 +47,11 @@ class Database extends Core {
     public $betweens;
 
     /**
+     * @var array REGEXP conditions
+     */
+    public $regexps;
+
+    /**
      * @var array WHERE conditions
      */
     public $wheres;
@@ -116,6 +121,7 @@ class Database extends Core {
         $this->betweens = [];
         $this->wheres = [];
         $this->whereIn = [];
+        $this->regexps = [];
         $this->groupBy = false;
         $this->orderBy = false;
         $this->offset = 0;
@@ -210,6 +216,23 @@ class Database extends Core {
         return $this;
     }
 
+    /**
+     * Sets a REGEXP condition
+     *
+     * @param string $column Column name
+     * @param string $value Value to match
+     * @param string $table Table
+     * @return object Database instance
+     */
+    public function regexp ($column, $pattern, $table = null) {
+        $table = !is_null($table) ? $table : $this->table;
+        $this->regexps[] = [
+            'table'         => $table,
+            'column'        => $column,
+            'pattern'       => $pattern,
+        ];
+        return $this;
+    }
 
     /**
      * Sets a WHERE condition
@@ -327,6 +350,9 @@ class Database extends Core {
         // Define between conditions
         $between = $this->getBetweenString();
 
+        // Define regexp conditions
+        $regexp = $this->getRegexpString();
+
         // Define where conditions
         $where = $this->getWhereString();
 
@@ -343,7 +369,7 @@ class Database extends Core {
         $limit = 'LIMIT ' . $this->offset . ',' . $this->limit;
 
         // Build query
-        $this->query = implode(' ', [$root, $joins, $where, $whereIn, $between, $groupBy, $orderBy, $limit]);
+        $this->query = implode(' ', [$root, $joins, $where, $whereIn, $between, $regexp,  $groupBy, $orderBy, $limit]);
 
         // Debug
         if ($this->app->config('debug.queries')) {
@@ -515,8 +541,11 @@ class Database extends Core {
         // Define where in
         $whereIn = $this->getWhereInString();
 
+        // Define where regexp
+        $regexp = $this->getRegexpString();
+
         // Build query
-        $this->query = 'DELETE FROM ' . $this->table . ' '. $where . ' ' . $whereIn;
+        $this->query = 'DELETE FROM ' . $this->table . ' '. implode(' ', [$where, $whereIn, $between, $regexp]);
 
         // Prepare statement
         $this->statement = $this->pdo->prepare($this->query);
@@ -602,6 +631,30 @@ class Database extends Core {
         // Iterate where creating the full conditions
         foreach ($this->betweens as $where) {
             $string .= ' AND ' . $where['table'] . '.' . $where['column'] . ' BETWEEN "' . $where['value_from'] . '" AND "' . $where['value_to'] . '" ';
+        }
+
+        // Return complete where in string
+        return $string;
+    }
+
+    /**
+     * Returns the regexps array as a WHERE string
+     *
+     * @return string WHERE string
+     */
+    private function getRegexpString () {
+
+        // String holder
+        $string = '';
+
+        // If there are not betweens in conditions, return empty
+        if (!count($this->regexps)) {
+            return $string;
+        }
+
+        // Iterate where creating the full conditions
+        foreach ($this->regexps as $where) {
+            $string .= ' AND ' . $where['table'] . '.' . $where['column'] . ' REGEXP "' . $where['pattern'] . '"';
         }
 
         // Return complete where in string
