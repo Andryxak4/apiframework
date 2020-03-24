@@ -294,10 +294,12 @@ class Model extends Core {
             $filterName = $current[0];
 
             // Add condition
-            foreach ($this->relationships['belongsToMany'] as $join) {
-                if ($filterName === $join['alias']) {
-                    $this->whereIn($join['pivot'] . '.' . $join['foreignKey'], (array) $value, $join['pivot']);
-                    $resolved[] = $key;
+            if(!empty($this->relationships['belongsToMany'])) {
+                foreach ($this->relationships['belongsToMany'] as $join) {
+                    if ($filterName === $join['alias']) {
+                        $this->whereIn($join['pivot'] . '.' . $join['foreignKey'], (array) $value, $join['pivot']);
+                        $resolved[] = $key;
+                    }
                 }
             }
         }
